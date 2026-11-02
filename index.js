@@ -1,14 +1,18 @@
 import express from "express";
 import cors from "cors";
 import { MongoClient } from "mongodb";
+import "dotenv/config"
 
 const app = express();
 const port = process.env.PORT || 5000;
 
+
+
 // connect with mongodb
 const client = new MongoClient(
-  process.env.MONGODB_CONNECTION_URI, // secure way
+  process.env.MONGODB_CONNECTION_URI,
 );
+
 
 export async function connectToMongoDB() {
   try {
@@ -21,7 +25,7 @@ export async function connectToMongoDB() {
 }
 
 const connectedClient = await connectToMongoDB();
-const db = connectedClient.db("social-event");
+const db = connectedClient?.db("social-event");
 const allEvent = db.collection("allEvent");
 
 //middleware
@@ -29,16 +33,20 @@ app.use(cors());
 app.use(express.json());
 
 //create event post api
-app.post("/all-event", async (req, res) => {
+app.post("/all-event/:email", async (req, res) => {
   const createdEventData = req.body;
-  const result = await allEvent.insertOne({...createdEventData, dateObj: new Date(createdEventData.date)});
+  const email = req.params.email;
+  const result = await allEvent.insertOne({
+    ...createdEventData,
+    email: email,
+  });
   res.send(result);
 });
 
 //manage event get api
 app.get("/all-event/:email", (req, res) => {
   const email = req.params.email;
-  const result = allEvent.find({ email: { $eq: email } }).sort({dateObj: -1});
+  const result = allEvent.find({ email: { $eq: email } }).sort({eventDate: -1});
   res.send(result);
 });
 
@@ -48,7 +56,11 @@ app.patch("/all-event/:email", async (req, res) => {
   const updatedEvent = req.body;
   const result = await allEvent.updateOne(
     { email: email },
-    { $set: {...updatedEvent, dateObj: new Date(updatedEvent.date)} },
+    {
+      $set: {
+        ...updatedEvent,
+      },
+    },
   );
   res.send(result);
 });
