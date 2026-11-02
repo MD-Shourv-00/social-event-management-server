@@ -42,11 +42,17 @@ app.post("/all-event/:email", async (req, res) => {
 });
 
 //manage event get api
-app.get("/all-event/:email", (req, res) => {
+app.get("/all-event/:email", async(req, res) => {
   const email = req.params.email;
-  const result = allEvent
-    .find({ email: { $eq: email } })
-    .sort({ dateObj: -1 });
+  const result = await allEvent
+    .find({
+      $and: [
+        { email: { $eq: email } },
+        { dateObj: { $gt: new Date() } },
+      ],
+    })
+    .sort({ dateObj: 1 })
+    .toArray();
   res.send(result);
 });
 
