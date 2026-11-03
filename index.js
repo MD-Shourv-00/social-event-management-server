@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import { MongoClient } from "mongodb";
+import { MongoClient, ObjectId } from "mongodb";
 import "dotenv/config";
 
 const app = express();
@@ -71,10 +71,18 @@ app.patch("/all-event/:email", async (req, res) => {
 });
 
 //manage event delete api
-app.delete("/all-event/:email", async (req, res) => {
-  const email = req.params.email;
+app.delete("/all-event/:email_id", async (req, res) => {
+  const [email, id] = req.params.email_id.split("_");
+  console.log(email, id)
   const result = await allEvent.deleteOne({
-    email: { $eq: email },
+    $and: [
+      {
+        email: { $eq: email },
+      },
+      {
+        _id: new ObjectId(id),
+      },
+    ],
   });
   res.send(result);
 });
