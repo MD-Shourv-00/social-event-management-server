@@ -24,6 +24,7 @@ export async function connectToMongoDB() {
 const connectedClient = await connectToMongoDB();
 const db = connectedClient?.db("social-event");
 const allEvent = db.collection("allEvent");
+const joinedEvnet = db.collection("joined-event");
 
 //middleware
 app.use(cors());
@@ -42,7 +43,7 @@ app.post("/all-event/:email", async (req, res) => {
 });
 
 //manage event get api
-app.get("/all-event/:email", async(req, res) => {
+app.get("/all-event/:email", async (req, res) => {
   const email = req.params.email;
   const result = await allEvent
     .find({
@@ -73,7 +74,7 @@ app.patch("/all-event/:email", async (req, res) => {
 //manage event delete api
 app.delete("/all-event/:email_id", async (req, res) => {
   const [email, id] = req.params.email_id.split("_");
-  console.log(email, id)
+  console.log(email, id);
   const result = await allEvent.deleteOne({
     $and: [
       {
@@ -88,17 +89,56 @@ app.delete("/all-event/:email_id", async (req, res) => {
 });
 
 //upcoming event api
-// dateObj: {$gte: new Date()}
 app.get("/all-future-event", async (req, res) => {
   const futureEvents = await allEvent
-    .find(
-      { dateObj: { $gte: new Date() } },
-      { projection: { _id: 0, email: 0 } },
-    )
+    .find({ dateObj: { $gte: new Date() } })
     .sort({ dateObj: 1 })
     .toArray();
 
   res.send(futureEvents);
+});
+
+//joined event post api
+app.post("/joined-event/:email", async (req, res) => {
+  const joinedEventData = req.body;
+  const email = req.params.email;
+  const result = await allEvent.insertOne({
+    ...createdEventData,
+    joinedUserEmail: email,
+    joinedStatus: true,
+  });
+  res.send(result);
+});
+
+//joined event get api for join status check
+app.get("/joined-event/:id", async (req, res) => {
+  const id = req.params.id;
+  const result = await joinedEvnet
+    .find(
+      { _id: new ObjectId(id) },
+      { joinedStatus: 1, _id: 0 },
+    )
+    .toArray();
+  res.send(result);
+});
+
+//joined event cancle join api
+app.delete("/joined-event/:id", async (req, res) => {
+  const id = req.params.id;
+  const result = await joinedEvnet.deleteOne({
+    _id: new ObjectId(id),
+  });
+  res.send(result);
+});
+
+//all joined event get api
+app.get("/joined-event/:email", async (req, res) => {
+  const email = req.params.email;
+  const result = await joinedEvnet
+    .find({ email: email })
+    .sort({ dateObj: 1 })
+    .toArray();
+  res.send(result);
 });
 
 app.listen(port, () => {
