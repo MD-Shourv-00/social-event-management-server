@@ -14,7 +14,7 @@ async function verifyToken(req, res, next) {
 
   if (!jwtToken) {
     return res
-      .status(404)
+      .status(401)
       .send({ massage: "no valid user" });
   }
 
