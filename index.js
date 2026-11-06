@@ -22,7 +22,7 @@ async function verifyToken(req, res, next) {
 
   if (!token) {
     return res
-      .status(404)
+      .status(401)
       .send({ massage: "no valid user" });
   }
 
