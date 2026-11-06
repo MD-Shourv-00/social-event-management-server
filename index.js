@@ -92,7 +92,7 @@ app.get(
       .find({
         $and: [
           { email: { $eq: email } },
-          { dateObj: { $gt: new Date() } },
+          { dateObj: { $gte: new Date() } },
         ],
       })
       .sort({ dateObj: 1 })
